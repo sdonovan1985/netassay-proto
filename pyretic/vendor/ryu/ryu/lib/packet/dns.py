@@ -220,6 +220,8 @@ class dns(packet_base.PacketBase):
             #oh. that's a problem...
             return None
 
+#        print "HELLO!"
+#        print "len " + str(dlen)
         newDns = cls()
 
         bits0 = 0

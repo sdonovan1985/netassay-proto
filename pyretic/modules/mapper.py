@@ -20,10 +20,10 @@ class Mapper:
     self.loadTypeFiles()
 
   def loadTypeFiles(self):
-    self.loadFile('servicedef/adverts.ini', 'ADVERT')
-    self.loadFile('servicedef/background.ini', 'BACKGROUND')
-    self.loadFile('servicedef/video.ini', 'VIDEO')
-    self.loadFile('servicedef/web.ini', 'WEB')
+    self.loadFile('pyretic/modules/servicedef/adverts.ini', 'ADVERT')
+    self.loadFile('pyretic/modules/servicedef/background.ini', 'BACKGROUND')
+    self.loadFile('pyretic/modules/servicedef/video.ini', 'VIDEO')
+    self.loadFile('pyretic/modules/servicedef/web.ini', 'WEB')
 
   def loadFile(self, filename, service):
     f = open(filename, 'r')

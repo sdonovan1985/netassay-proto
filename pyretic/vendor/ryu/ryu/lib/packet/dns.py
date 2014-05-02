@@ -298,8 +298,8 @@ class dns(packet_base.PacketBase):
 
         flags += "|"
 
-        s = "(id:%x fl:%s op:%d nq:%d na:%d nath:%d nadd:%d)" % (self.id,
-         flags, self.opcode, len(self.questions), len(self.answers),
+        s = "(id:%x fl:%s rc:%d op:%d nq:%d na:%d nath:%d nadd:%d)" % (self.id,
+         flags, self.rcode, self.opcode, len(self.questions), len(self.answers),
          len(self.authorities), len(self.additional))
 
         if len(self.questions) > 0:

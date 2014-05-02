@@ -44,6 +44,11 @@ from pyretic.lib.corelib import *
 from pyretic.lib.std import *
 from pyretic.lib.query import *
 from ryu.lib.packet.dns import *
+from pyretic.modules.dnsclassify import *
+from datetime import datetime
+from threading import Timer
+
+    
 
 class dumpdns(DynamicPolicy):
     """Standard MAC-learning logic"""
@@ -51,10 +56,18 @@ class dumpdns(DynamicPolicy):
         super(dumpdns,self).__init__()
         self.flood = flood()           # REUSE A SINGLE FLOOD INSTANCE
         self.set_initial_state()
+        self.classifier = DNSClassifier()
+        self.dns_cleanup()             # Starts the timer as well.
+        self.classifier.set_all_callback(self.print_it)
+
+    def print_it(self, addr, dict):
+        print addr
+        self.classifier.print_entry(dict, "    ")
+        
 
     def set_initial_state(self):
         dnspkts = packets(None, ['srcmac'])
-        dnspkts.register_callback(self.print_dns)
+        dnspkts.register_callback(self.learn_dns)
         self.dns_inbound = match(srcport = 53) >> dnspkts
         self.dns_outbound = match(dstport = 53) >> dnspkts
 
@@ -92,6 +105,31 @@ class dumpdns(DynamicPolicy):
         parsed_dns = dns.parser(pkt['raw'][offset:])
         print "Packet:"
         print parsed_dns._to_str()
+
+        print "Sending packet to database"
+        self.classifier.parse_new_DNS(pkt['raw'][offset:])
+        
+        print ""
+        print ""
+        print "PRINTING DNS DATABASE"
+        print "---------------------"
+        self.classifier.print_entries()
+        print "---------------------"
+        print "Time now:"
+        now = datetime.now()
+        print str(now)
+        print ""
+        print ""
+        
+
+    def learn_dns(self,pkt):
+        offset = 42 #FIXME! THIS ONLY WORKS WITH 
+        self.classifier.parse_new_DNS(pkt['raw'][offset:])
+    
+    def dns_cleanup(self):
+        self.classifier.clean_expired()
+        Timer(300, self.dns_cleanup).start()
+
         
 def main():
     return dumpdns()

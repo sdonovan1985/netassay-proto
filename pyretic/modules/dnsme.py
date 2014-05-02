@@ -14,11 +14,12 @@ class DNSMetadataEngineException(Exception):
 
 class DNSMetadataEngine:
     def __init__(self):
-        pass
+        self.classifier = DNSClassifier()
+        self.entries = []
 
-    def update_rules(self):
-        pass
-    
+
+    def new_rule(rule):
+        entries.append(DNSMetadataEntry(self.classifier, self, rule))
 
 class DNSMetadataEntry:
     def __init__(self, classifier, engine, rule ):

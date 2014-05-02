@@ -47,6 +47,7 @@ from ryu.lib.packet.dns import *
 from pyretic.modules.dnsclassify import *
 from datetime import datetime
 from threading import Timer
+from dnsentry import DNSClassifierEntry
 
     
 
@@ -59,11 +60,18 @@ class dumpdns(DynamicPolicy):
         self.classifier = DNSClassifier()
         self.dns_cleanup()             # Starts the timer as well.
         self.classifier.set_all_callback(self.print_it)
-
-    def print_it(self, addr, dict):
-        print addr
-        self.classifier.print_entry(dict, "    ")
         
+    def __del__(self):
+        self.timer.cancel()
+        del self.timer
+
+    def print_it(self, addr, entry):
+        print addr
+        entry.print_entry() 
+        entry.register_timeout_callback(self.expiry_cb)
+    
+    def expiry_cb(self, entry):
+        print entry.IP + " has expired."        
 
     def set_initial_state(self):
         dnspkts = packets(None, ['srcmac'])
@@ -128,7 +136,8 @@ class dumpdns(DynamicPolicy):
     
     def dns_cleanup(self):
         self.classifier.clean_expired()
-        Timer(300, self.dns_cleanup).start()
+        self.timer = Timer(30, self.dns_cleanup)
+        self.timer.start()
 
         
 def main():

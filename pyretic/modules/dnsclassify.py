@@ -35,7 +35,7 @@ class DNSClassifier:
         self.db = {}                   # dictionary of DNSClassifierEntrys
         self.mapper = Mapper()
         self.new_callbacks = []        # For each new entry
-        self.updated_callbacks = []    # For each time an entry is updated
+        self.update_callbacks = []     # For each time an entry is updated
         self.all_callbacks = []        # When entry is updated or new
         self.class_callbacks = {}      # Dictionary of lists of callbacks per
                                        # classification
@@ -71,7 +71,7 @@ class DNSClassifier:
 
                         if resp.name not in self.db[addr].names:
                             self.db[addr].names.append(resp.name)
-                        for callback in self.updated_callbacks:
+                        for callback in self.update_callbacks:
                             callback(addr, self.db[addr])
                         if old_class != classification:
                             if classification in self.class_callbacks.keys():
@@ -106,18 +106,38 @@ class DNSClassifier:
             self.db[key].print_entry()
 
     def set_new_callback(self, cb):
-        self.new_callbacks.append(cb)
+        if cb not in self.new_callbacks:
+            self.new_callbacks.append(cb)
 
-    def set_updated_callback(self, cb):
-        self.updated_callbacks.append(cb)
+    def remove_new_callback(self, cb):
+        self.new_callbacks.remove(cb)
+
+    def set_update_callback(self, cb):
+        if cb not in self.update_callbacks:
+            self.update_callbacks.append(cb)
+
+    def remove_update_callback(self, cb):
+        self.update_callbacks.remove(cb)
+
+    #TODO: classication change callback?
 
     def set_all_callback(self, cb):
-        self.all_callbacks.append(cb)
+        if cb not in self.update_callbacks:
+            self.all_callbacks.append(cb)
+
+    def remove_all_callback(self, cb):
+        self.all_callbacks.remove(cb)
 
     def set_classification_callback(self, cb, classification):
         if self.class_callbacks[classification] is None:
             self.class_callbacks[classification] = list()
-        self.class_callbacks[classification].append(cb)
+        if cb not in self.class_callbacks[classification]:
+            self.class_callbacks[classification].append(cb)
+
+    def set_classification_callback(self, cb, classification):
+        if self.class_callbacks[classification] is None:
+            return
+        self.class_callbacks[classification].remove(cb)
 
     def find_by_ip(self, addr):
         """Returns the entry specified by the ip 'addr' if it exists

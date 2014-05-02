@@ -18,8 +18,9 @@ from threading import Timer
 #   is_expired()    - This returns if the entry is expired or not. By default,
 #                     this is checked based on the current time.
 #   update_expiry() - Pass in a new TTL, and the TTL and new expiry will be set
-#   register_timeout_callback() - takes a function of the form func(entry), 
-#                     where 'entry' will be the the entry that's expiring.
+#   register_timeout_callback() - takes a function of the form func(addr,entry) 
+#                     where 'addr' is the IP address of the entry and 'entry' 
+#                     will be the the entry that's expiring.
 class DNSClassifierEntry:
     def __init__(self, IP, names, classification, ttl, expiry=None):
         self.IP = IP
@@ -66,14 +67,22 @@ class DNSClassifierEntry:
     def update_expiry(self, ttl):
         self.ttl = ttl
         self.expiry = datetime.now() + timedelta(seconds=ttl)
+        if self.timer is not None:
+            self.timer.cancel()
+            self._set_and_start_timer()
     
     def register_timeout_callback(self, func):
-        self.timeout_callbacks.append(func)
+        if func not in self.timeout_callbacks:
+            self.timeout_callbacks.append(func) 
         if self.timer is None and not self.is_expired():
-            time_to_go = self.expiry - datetime.now()
-            self.timer = Timer(time_to_go.total_seconds(), self._call_callbacks)
-            self.timer.start()
+            self._set_and_start_timer()
 
     def _call_callbacks(self):
+        #This is called when it expires.
         for cb in self.timeout_callbacks:
-            cb(self)
+            cb(self.ip, self)
+
+    def _set_and_start_timer(self):
+        time_to_go = self.expiry - datetime.now()
+        self.timer = Timer(time_to_go.total_seconds(), self._call_callbacks)
+        self.timer.start()

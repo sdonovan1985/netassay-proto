@@ -11,7 +11,7 @@ class matchAS(Filter):
     """
     def __init__(self, AS):
         self.assayrule = AssayRule(AssayRule.AS, AS)
-        
+        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
         pass
 
     def eval(self, pkt):
@@ -35,7 +35,7 @@ class matchClass(Filter):
         # probably should verify that the class is vaid...
         self.dme = DNSMetadataEngine.get_instance()
         self.assayrule = AssayRule(AssayRule.CLASSIFICATION, classification)
-        #TODO Update assayrule callbacks
+        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
         self.dme.new_rule(self.assayrule)
 
 
@@ -57,7 +57,7 @@ class matchURL(Filter):
         # probably should verify that the URL is vaid...
         self.dme = DNSMetadataEngine.get_instance()
         self.assayrule = AssayRule(AssayRule.DNS_NAME, url)
-        #TODO Update assayrule callbacks
+        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
         self.dme.new_rule(self.assayrule)
     
     def eval(self, pkt):
@@ -71,15 +71,36 @@ class matchURL(Filter):
 
 
 class AssayMainControlModule:
+    INSTANCE = None
+    # Singleton! should be initialized once by the overall control program!
 
     def __init__(self, update_policy_cb=None):
+        if self.INSTANCE is not None:
+            raise ValueError("Instance already exists!")
+        
+        #DME setup
         self.dnsme = DNSMetadataEngine() 
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
+
+        #BGP setup
+
+        #General information
         self.update_policy_cb = update_policy_cb
         pass
 
+    @classmethod
+    def get_instance(cls):
+        if cls.INSTANCE is None:
+            raise ValueError("Instance not initialzied!")
+        return cls.INSTANCE
+
     def set_update_policy_callback(self, cb):
         self.update_policy_cb = cb
+
+    def rule_update(self, assayrule):
+        #This is called whenever an AssayRule gets a ruleupdate
+        if self.update_policy_cb is not None:
+            self.update_policy_cb()
 
     def get_assay_ruleset(self):
         """

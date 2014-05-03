@@ -56,3 +56,6 @@ class AssayRule:
 
     def get_ruleset(self):
         return self._ruleset
+
+    def get_list_of_rules(self):
+        return self._rulelist

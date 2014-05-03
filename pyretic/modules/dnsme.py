@@ -13,13 +13,38 @@ class DNSMetadataEngineException(Exception):
     pass
 
 class DNSMetadataEngine:
+    INSTANCE = None        
+    # Singleton! should be initialized by the MCM only!
+    
     def __init__(self):
+        if self.INSTANCE is not None:
+            raise ValueError("Instance already exists!")
         self.classifier = DNSClassifier()
         self.entries = []
+    
+    def get_forwarding_rules(self):
+        """
+        This gets the forwarding rules that the DNS Classifier needs to work.
+        """
+        dnspkts = packets(None, ['srcmac'])
+        offset = 42 #FIXME! THIS ONLY WORKS WITH IPv4
+        dnspkts.register_callback(
+            self.classifier.parse_new_DNS(pkt['raw'][offset:]))
+        dns_inbound = match(srcport = 53) >> dnspkts
+        dns_outbound = match(dstport = 53) >> dnspkts
 
+        return dns_inbound + dns_outbound
+
+    @classmethod
+    def get_instance(cls):
+        if cls.INSTANCE is None:
+            raise ValueError("Instance not initialized!")
+        return cls.INSTANCE
 
     def new_rule(rule):
         entries.append(DNSMetadataEntry(self.classifier, self, rule))
+
+    
 
 class DNSMetadataEntry:
     def __init__(self, classifier, engine, rule ):

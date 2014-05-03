@@ -46,7 +46,7 @@ class matchClass(Filter):
         return set()
 
     def __repr__(self):
-        return "matchClass: " + self.assayrule.value)
+        return "matchClass: " + self.assayrule.value
 
 #this is based on match from pyretic.core.langauge
 class matchURL(Filter):
@@ -67,7 +67,7 @@ class matchURL(Filter):
         return set()
 
     def __repr__(self):
-        return "matchURL: " + self.assayrule.value)
+        return "matchURL: " + self.assayrule.value
 
 
 class AssayMainControlModule:
@@ -79,14 +79,19 @@ class AssayMainControlModule:
             raise ValueError("Instance already exists!")
         
         #DME setup
+        print "about to call DNSME"
         self.dnsme = DNSMetadataEngine() 
+        print "Finished call DNSME"
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
 
         #BGP setup
 
         #General information
         self.update_policy_cb = update_policy_cb
-        pass
+
+        INSTANCE = self
+        print "AssayMainControlModule Initialized!"
+
 
     @classmethod
     def get_instance(cls):

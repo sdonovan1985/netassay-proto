@@ -1,0 +1,50 @@
+from pyretic.lib.corelib import *
+from pyretic.lib.std import *
+from pyretic.lib.query import *
+from pyretic.modules.assaymcm import *
+
+
+# There are 4 switches in the configuration: 
+#                          +--+
+#                      +---+s3+---+
+#                    1 |   +--+   | 1 Slow Link
+#                +--+--+          +----+--+
+# Internet+------+s1|                  |s2+-------+h1
+#                +--+--+          +----+--+
+#                    2 |   +--+   | 2
+#                      +---+s4+---+
+#                          +--+
+# Switch 3 and 4 behaviour is simple: in one port, out the other
+# Switch 1 and 2 behaviour is a *touch* more complex. Anything coming from the 
+# links to 3 or 4 goes to the Internet or host, respectively. Anything coming
+# from the Internet or host can be manipulated - sent via the slow or fast
+# paths, depending on what is needed.
+
+
+class TestAssay(DynamicPolicy):
+    def __init__(self):
+        super(TestAssay, self).__init__()
+        self.flood = flood()
+
+        #Start up Assay and register update_policy()
+        self.assay_mcm = AssayMainControlModule(self.update_policy)
+        
+        # set up s3 and s4's very basic rules
+        
+        self.s3rules = ((match(switch=3, inport=1) >> fwd(2)) + 
+                        (match(switch=3, inport=2) >> fwd(1)))
+        self.s4rules = ((match(switch=3, inport=1) >> fwd(2)) + 
+                        (match(switch=3, inport=2) >> fwd(1)))
+
+        #we care about source port first, then rest, use the if_ construct
+        self.s1s2rules = ((match(switch=2) | match(switch=2)) >>
+                          if_((match(inport=1)|match(inport=2)), fwd(3),
+                              if_(matchURL('google.com'),fwd(1),fwd(2))))
+
+    def update_policy(self):
+        pass
+
+
+def main():
+    return TestAssay()
+    

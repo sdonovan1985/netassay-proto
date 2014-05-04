@@ -23,9 +23,14 @@ class DNSMetadataEngine:
         self.classifier = DNSClassifier()
         self.entries = []
 
-        INSTANCE = self
         print "DNSMetadataEngine Initialized!"
         print "DNSME __init__ end"
+
+    @classmethod
+    def get_instance(cls):
+        if cls.INSTANCE is None:
+            cls.INSTANCE = DNSMetadataEngine()
+        return cls.INSTANCE
     
     def get_forwarding_rules(self):
         """
@@ -41,16 +46,10 @@ class DNSMetadataEngine:
         return dns_inbound + dns_outbound
 
     def _dns_parse_cb(self, pkt):
-            self.classifier.parse_new_DNS(pkt['raw'][offset:])
+        self.classifier.parse_new_DNS(pkt['raw'][offset:])
         
-    @classmethod
-    def get_instance(cls):
-        if cls.INSTANCE is None:
-            raise ValueError("Instance not initialized!")
-        return cls.INSTANCE
-
-    def new_rule(rule):
-        entries.append(DNSMetadataEntry(self.classifier, self, rule))
+    def new_rule(self, rule):
+        self.entries.append(DNSMetadataEntry(self.classifier, self, rule))
 
     
 

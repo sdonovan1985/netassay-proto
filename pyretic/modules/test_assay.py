@@ -27,7 +27,8 @@ class TestAssay(DynamicPolicy):
         self.flood = flood()
 
         #Start up Assay and register update_policy()
-        self.assay_mcm = AssayMainControlModule(self.update_policy)
+        self.assay_mcm = AssayMainControlModule.get_instance()
+        self.assay_mcm.set_update_policy_callback(self.update_policy)
         
         # set up s3 and s4's very basic rules
         

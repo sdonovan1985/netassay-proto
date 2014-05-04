@@ -74,29 +74,28 @@ class AssayMainControlModule:
     INSTANCE = None
     # Singleton! should be initialized once by the overall control program!
 
-    def __init__(self, update_policy_cb=None):
+    def __init__(self):
         if self.INSTANCE is not None:
             raise ValueError("Instance already exists!")
         
         #DME setup
         print "about to call DNSME"
-        self.dnsme = DNSMetadataEngine() 
+        self.dnsme = DNSMetadataEngine.get_instance() 
         print "Finished call DNSME"
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
 
         #BGP setup
 
         #General information
-        self.update_policy_cb = update_policy_cb
+        self.update_policy_cb = None
 
-        INSTANCE = self
         print "AssayMainControlModule Initialized!"
 
 
     @classmethod
     def get_instance(cls):
         if cls.INSTANCE is None:
-            raise ValueError("Instance not initialzied!")
+            cls.INSTANCE = AssayMainControlModule()
         return cls.INSTANCE
 
     def set_update_policy_callback(self, cb):

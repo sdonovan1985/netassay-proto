@@ -1,4 +1,5 @@
 from pyretic.core.language import *
+from pyretic.modules.assaymcm import matchAS,matchClass,matchURL
 
 ###############################################################################
 # Class hierarchy syntax tree traversal
@@ -8,6 +9,9 @@ def ast_fold(fun, acc, policy):
     if (  policy == identity or
           policy == drop or
           isinstance(policy,match) or
+          isinstance(policy,matchURL) or
+          isinstance(policy,matchClass) or
+          isinstance(policy,matchAS) or
           isinstance(policy,modify) or
           policy == Controller or
           isinstance(policy,Query)):
@@ -30,7 +34,7 @@ def ast_fold(fun, acc, policy):
         acc = fun(acc,policy)
         return ast_fold(fun,acc,policy.policy)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(type(policy))
     
 def add_dynamic_sub_pols(acc, policy):
     if isinstance(policy,DynamicPolicy):

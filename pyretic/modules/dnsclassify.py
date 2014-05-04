@@ -2,7 +2,8 @@
 # Based off of https://github.com/shahifaqeer/dnsclassifier. Modified
 # to work with Pyretic.
 
-from ryu.lib.packet.dns import *
+from ryu.lib.packet.dns import dns
+from ryu.lib import addrconv
 from mapper import Mapper
 from dnsentry import DNSClassifierEntry as Entry
 
@@ -65,7 +66,7 @@ class DNSClassifier:
                             for callback in self.class_callbacks[classification]:
                                 callback(addr, self.db[addr])
                     else:
-                        self.db[addr].update_expiry(ttl)
+                        self.db[addr].update_expiry(resp.ttl)
                         old_class = self.db[addr].classification
                         self.db[addr].classification = classification
 

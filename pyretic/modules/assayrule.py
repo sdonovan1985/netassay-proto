@@ -58,4 +58,4 @@ class AssayRule:
         return self._ruleset
 
     def get_list_of_rules(self):
-        return self._rulelist
+        return self._rule_list

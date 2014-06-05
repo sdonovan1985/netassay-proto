@@ -34,8 +34,8 @@ class TestAssay(DynamicPolicy):
         
         self.s3rules = ((match(switch=3, inport=1) >> fwd(2)) + 
                         (match(switch=3, inport=2) >> fwd(1)))
-        self.s4rules = ((match(switch=3, inport=1) >> fwd(2)) + 
-                        (match(switch=3, inport=2) >> fwd(1)))
+        self.s4rules = ((match(switch=4, inport=1) >> fwd(2)) + 
+                        (match(switch=4, inport=2) >> fwd(1)))
 
         #we care about source port first, then rest, use the if_ construct
         self.s1rules = ((match(switch=1, inport=1) >> fwd(3)) +
@@ -44,6 +44,15 @@ class TestAssay(DynamicPolicy):
         self.s2rules = ((match(switch=2, inport=1) >> fwd(3)) +
                         (match(switch=2, inport=2) >> fwd(3)) +
                         (match(switch=2, inport=3) >> fwd(1)))
+
+        self.URLs1rules = ((match(switch=1, inport=1) >> fwd(3)) +
+                           (match(switch=1, inport=2) >> fwd(3)) +
+                           (match(switch=1, inport=3) >> 
+                            if_(matchURL('google.com'), fwd(1), fwd(2))))
+        self.URLs2rules = ((match(switch=2, inport=1) >> fwd(3)) +
+                           (match(switch=2, inport=2) >> fwd(3)) +
+                           (match(switch=2, inport=3) >>
+                            if_(matchURL('google.com'), fwd(1), fwd(2))))
         
         self.s1s2rules = ((match(switch=1) | match(switch=2)) >>
                           if_((match(inport=1)|match(inport=2)), fwd(3),
@@ -52,7 +61,9 @@ class TestAssay(DynamicPolicy):
         self.update_policy()
 
     def update_policy(self):
-        self.policy = self.assay_mcm.get_assay_ruleset() + self.s3rules + self.s4rules + self.s1rules + self.s2rules
+        self.policy = self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+        self.policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        self.policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 # self.s1s2rules
         print self.policy
 

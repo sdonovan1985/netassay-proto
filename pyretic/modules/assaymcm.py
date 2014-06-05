@@ -60,6 +60,8 @@ class matchURL(Filter):
     matches only on IP addresses from the specified url.
     """
     def __init__(self, url):
+        logging.getLogger('netassay.matchURL').info("matchURL.__init__(): called")
+        self.logger = logging.getLogger('netassay.matchURL')
         # probably should verify that the URL is vaid...
         self.dme = DNSMetadataEngine.get_instance()
         self.assayrule = AssayRule(AssayRule.DNS_NAME, url)
@@ -79,10 +81,14 @@ class matchURL(Filter):
         return set()
 
     def __repr__(self):
-        return "matchURL: " + self.assayrule.value
+        retval = "matchURL: " + self.assayrule.value
+        for rule in self.assayrule.get_list_of_rules():
+            retval = retval + "\n   " + str(rule)
+        return retval
+#"matchURL: " + self.assayrule.value
 
     def generate_classifier(self):
-        #lovingly stoen from class match.
+        #lovingly stolen from class match.
         r1 = Rule(self,[identity])
         r2 = Rule(identity,[drop])
         return Classifier([r1, r2])
@@ -94,11 +100,18 @@ class matchURL(Filter):
                 self.assayrule.value == other.assayrule.value)
 
     def intersect(self, pol):
+        self.logger.debug("Intersect called")
+
         current_min = pol
+        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
+        self.logger.debug("pol         = " + str(pol))
+
         for rule in self.assayrule.get_list_of_rules():
             current_min = rule.intersect(current_min)
-
+        self.logger.debug("current_min = " + str(current_min))
         return current_min
+
+
 #        return self.assayrule.get_ruleset().intersect(pol)
 #        return pol.intersect(self.assayrule.get_ruleset())
 #        if pol == identity:
@@ -138,6 +151,8 @@ class AssayMainControlModule:
         #Basic setup
         self.setup_logger()
 
+        self.logger.info("AssayMCM.__init__(): called") 
+
         #DME setup
         self.dnsme = DNSMetadataEngine.get_instance() 
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
@@ -147,7 +162,7 @@ class AssayMainControlModule:
         #General information
         self.update_policy_cb = None
 
-        print "AssayMainControlModule Initialized!"
+        self.logger.info("AssayMainControlModule Initialized!")
 
 
     @classmethod
@@ -161,16 +176,23 @@ class AssayMainControlModule:
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
+        logfile = logging.FileHandler('netassay.log')
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
         self.logger = logging.getLogger('netassay')
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
+        self.logger.addHandler(logfile)
 
 
     def set_update_policy_callback(self, cb):
+        self.logger.info("AssayMCM:set_update_policy_callback(): called")
+        self.logger.debug("    callback: " + str(cb))
         self.update_policy_cb = cb
 
     def rule_update(self, assayrule):
         #This is called whenever an AssayRule gets a ruleupdate
+        self.logger.info("AssayMCM:rule_update(): called")
         if self.update_policy_cb is not None:
             self.update_policy_cb()
 
@@ -180,6 +202,6 @@ class AssayMainControlModule:
         that are specific to the MCM and it's children.
         In particular, this adds rules to redirect DNS response packets to the
         """
-
+        self.logger.info("AssayMCM:get_assay_ruleset(): called")
         # Just keep adding on further rulesets
         return self.dnsme_rules

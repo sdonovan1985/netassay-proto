@@ -130,13 +130,15 @@ class DNSClassifier:
         self.all_callbacks.remove(cb)
 
     def set_classification_callback(self, cb, classification):
-        if self.class_callbacks[classification] is None:
+        print "set_classification_callback: " + str(cb)
+        print "classification:              " + str(classification)
+        if classification not in self.class_callbacks.keys():
             self.class_callbacks[classification] = list()
         if cb not in self.class_callbacks[classification]:
             self.class_callbacks[classification].append(cb)
 
-    def set_classification_callback(self, cb, classification):
-        if self.class_callbacks[classification] is None:
+    def remove_classification_callback(self, cb, classification):
+        if classification not in self.class_callbacks.keys():
             return
         self.class_callbacks[classification].remove(cb)
 

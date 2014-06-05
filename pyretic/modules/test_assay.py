@@ -53,6 +53,14 @@ class TestAssay(DynamicPolicy):
                            (match(switch=2, inport=2) >> fwd(3)) +
                            (match(switch=2, inport=3) >>
                             if_(matchURL('google.com'), fwd(1), fwd(2))))
+        self.CLASSs1rules = ((match(switch=1, inport=1) >> fwd(3)) +
+                             (match(switch=1, inport=2) >> fwd(3)) +
+                             (match(switch=1, inport=3) >> 
+                              if_(matchClass('VIDEO'), fwd(1), fwd(2))))
+        self.CLASSs2rules = ((match(switch=2, inport=1) >> fwd(3)) +
+                             (match(switch=2, inport=2) >> fwd(3)) +
+                             (match(switch=2, inport=3) >>
+                              if_(matchClass('VIDEO'), fwd(1), fwd(2))))
         
         self.s1s2rules = ((match(switch=1) | match(switch=2)) >>
                           if_((match(inport=1)|match(inport=2)), fwd(3),
@@ -62,7 +70,8 @@ class TestAssay(DynamicPolicy):
 
     def update_policy(self):
         self.policy = self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-        self.policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        self.policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+        self.policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 #        self.policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 # self.s1s2rules
         print self.policy

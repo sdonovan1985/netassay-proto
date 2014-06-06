@@ -10,229 +10,122 @@ from pyretic.modules.bgpme import *
 class MainControlModuleException(Exception):
     pass
 
+# All the new matchXXXX policies should inherit from here. They are all very
+# similar, so there is tremendous reuse of code. 
 #this is based on match from pyretic.core.langauge
-class matchAS(Filter):
+class NetAssayMatch(Filter):
+    def __init__(self, metadata_engine, ruletype, rulevalue):
+        loggername = "netassay." + self.__class__.__name__
+        logging.getLogger(loggername).info("__init__(): called")
+        self.logger = logging.getLogger(loggername)
+        # probably should verify that the URL is vaid...
+        self.me = metadata_engine 
+        self.assayrule = AssayRule(ruletype, rulevalue)
+        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
+        self.me.new_rule(self.assayrule)
+        self._classifier = self.generate_classifier()
+
+        #FIXME
+        self.map = {}
+
+    def eval(self, pkt):
+        for rule in self.assayrule.get_list_of_rules():
+            if rule.eval(pkt) == pkt:
+                return pkt
+        return set()
+
+    def __repr__(self):
+        retval = self.__class__.__name__ + ": " + self.assayrule.value
+        for rule in self.assayrule.get_list_of_rules():
+            retval = retval + "\n   " + str(rule)
+        return retval
+
+    def generate_classifier(self):
+        #lovingly stolen from class match.
+        r1 = Rule(self,[identity])
+        r2 = Rule(identity,[drop])
+        return Classifier([r1, r2])
+
+    def __eq__(self, other):
+        return (isinstance(other, type(self)) and 
+                self.assayrule.type == other.assayrule.type and
+                self.assayrule.value == other.assayrule.value)
+
+    def intersect(self, pol):
+        self.logger.debug("Intersect called")
+
+        current_min = pol
+        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
+        self.logger.debug("pol         = " + str(pol))
+
+        for rule in self.assayrule.get_list_of_rules():
+            current_min = rule.intersect(current_min)
+        self.logger.debug("current_min = " + str(current_min))
+        return current_min
+
+    def __and__(self, pol):
+        raise MainControlModuleException(self.__class__.__name__+":__and__")
+
+    def __hash__(self, pol):
+        raise MainControlModuleException(self.__class__.__name__+":__hash__")
+
+    def covers(self, other):
+        if (other == self):
+            return True
+        return False
+
+
+
+
+class matchAS(NetAssayMatch):
     """
-    matches IP prfixes related to the specified AS.
+    matches IP prefixes related to the specified AS.
     """
     def __init__(self, asnum):
         logging.getLogger('netassay.matchAS').info("matchAS.__init__(): called")
-        self.logger = logging.getLogger('netassay.matchAS')
-        # probably should verify that the URL is vaid...
-        self.bme = BGPMetadataEngine.get_instance()
-        self.assayrule = AssayRule(AssayRule.AS, asnum)
-        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
-        self.bme.new_rule(self.assayrule)
-        self._classifier = self.generate_classifier()
+        metadata_engine = BGPMetadataEngine.get_instance()
+        ruletype = AssayRule.AS
+        rulevalue = asnum
+        super(matchAS, self).__init__(metadata_engine, ruletype, rulevalue)
 
-        #FIXME
-        self.map = {}
-  
-    def eval(self, pkt):
-        for rule in self.assayrule.get_list_of_rules():
-            if rule.eval(pkt) == pkt:
-                return pkt
-        return set()
-
-    def __repr__(self):
-        retval = "matchAS: " + self.assayrule.value
-        for rule in self.assayrule.get_list_of_rules():
-            retval = retval + "\n   " + str(rule)
-        return retval
-
-    def generate_classifier(self):
-        #lovingly stolen from class match.
-        r1 = Rule(self,[identity])
-        r2 = Rule(identity,[drop])
-        return Classifier([r1, r2])
-#        raise MainControlModuleException("matchAS.generate_classifier")
-
-    def __eq__(self, other):
-        return (isinstance(other, matchAS) and 
-                self.assayrule.type == other.assayrule.type and
-                self.assayrule.value == other.assayrule.value)
-
-    def intersect(self, pol):
-        self.logger.debug("Intersect called")
-
-        current_min = pol
-        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
-        self.logger.debug("pol         = " + str(pol))
-
-        for rule in self.assayrule.get_list_of_rules():
-            current_min = rule.intersect(current_min)
-        self.logger.debug("current_min = " + str(current_min))
-        return current_min
-
-    def __and__(self, pol):
-        raise MainControlModuleException("matchAS.__and__")
-
-    def __hash__(self, pol):
-        raise MainControlModuleException("matchAS.__hash__")
-
-    def covers(self, other):
-        if (other == self):
-            return True
-        return False
-        raise MainControlModuleException("matchAS.covers")
-
-
-#this is based on match from pyretic.core.langauge
-class matchClass(Filter):
+class matchASPath(NetAssayMatch):
     """
-    matches only on IP addresses from the specified AS.
+    matches IP prefixes related to the specified AS.
     """
-    def __init__(self, classification):
-        # probably should verify that the class is vaid...
-        logging.getLogger('netassay.matchClass').info("matchClass.__init__(): called")
-        self.logger = logging.getLogger('netassay.matchClass')
-        # probably should verify that the URL is vaid...
-        self.dme = DNSMetadataEngine.get_instance()
-        self.assayrule = AssayRule(AssayRule.CLASSIFICATION, classification)
-        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
-        self.dme.new_rule(self.assayrule)
-        self._classifier = self.generate_classifier()
+    def __init__(self, asnum):
+        logging.getLogger('netassay.matchASPath').info("matchASPath.__init__(): called")
+        metadata_engine = BGPMetadataEngine.get_instance()
+        ruletype = AssayRule.AS_IN_PATH
+        rulevalue = asnum
+        super(matchASPath, self).__init__(metadata_engine, ruletype, rulevalue)
 
-        #FIXME
-        self.map = {}
-
-
-    def eval(self, pkt):
-        for rule in self.assayrule.get_list_of_rules():
-            if rule.eval(pkt) == pkt:
-                return pkt
-        return set()
-
-    def __repr__(self):
-        retval = "matchClass: " + self.assayrule.value
-        for rule in self.assayrule.get_list_of_rules():
-            retval = retval + "\n   " + str(rule)
-        return retval
-#"matchURL: " + self.assayrule.value
-
-    def generate_classifier(self):
-        #lovingly stolen from class match.
-        r1 = Rule(self,[identity])
-        r2 = Rule(identity,[drop])
-        return Classifier([r1, r2])
-#        raise MainControlModuleException("matchClass.generate_classifier")
-
-    def __eq__(self, other):
-        return (isinstance(other, matchClass) and 
-                self.assayrule.type == other.assayrule.type and
-                self.assayrule.value == other.assayrule.value)
-
-    def intersect(self, pol):
-        self.logger.debug("Intersect called")
-
-        current_min = pol
-        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
-        self.logger.debug("pol         = " + str(pol))
-
-        for rule in self.assayrule.get_list_of_rules():
-            current_min = rule.intersect(current_min)
-        self.logger.debug("current_min = " + str(current_min))
-        return current_min
-
-    def __and__(self, pol):
-        raise MainControlModuleException("matchClass.__and__")
-
-    def __hash__(self, pol):
-        raise MainControlModuleException("matchClass.__hash__")
-
-    def covers(self, other):
-        if (other == self):
-            return True
-        return False
-        raise MainControlModuleException("matchClass.covers")
-
-
-#this is based on match from pyretic.core.langauge
-class matchURL(Filter):
+class matchURL(NetAssayMatch):
     """
-    matches only on IP addresses from the specified url.
+    matches IPs related to the specified URL.
     """
     def __init__(self, url):
         logging.getLogger('netassay.matchURL').info("matchURL.__init__(): called")
-        self.logger = logging.getLogger('netassay.matchURL')
-        # probably should verify that the URL is vaid...
-        self.dme = DNSMetadataEngine.get_instance()
-        self.assayrule = AssayRule(AssayRule.DNS_NAME, url)
-        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
-        self.dme.new_rule(self.assayrule)
-        self._classifier = self.generate_classifier()
+        metadata_engine = DNSMetadataEngine.get_instance()
+        ruletype = AssayRule.DNS_NAME
+        rulevalue = url
+        super(matchURL, self).__init__(metadata_engine, ruletype, rulevalue)
 
-        #FIXME
-        self.map = {}
-
-
-    
-    def eval(self, pkt):
-        for rule in self.assayrule.get_list_of_rules():
-            if rule.eval(pkt) == pkt:
-                return pkt
-        return set()
-
-    def __repr__(self):
-        retval = "matchURL: " + self.assayrule.value
-        for rule in self.assayrule.get_list_of_rules():
-            retval = retval + "\n   " + str(rule)
-        return retval
-#"matchURL: " + self.assayrule.value
-
-    def generate_classifier(self):
-        #lovingly stolen from class match.
-        r1 = Rule(self,[identity])
-        r2 = Rule(identity,[drop])
-        return Classifier([r1, r2])
-#        raise MainControlModuleException("matchURL.generate_classifier")
-
-    def __eq__(self, other):
-        return (isinstance(other, matchURL) and 
-                self.assayrule.type == other.assayrule.type and
-                self.assayrule.value == other.assayrule.value)
-
-    def intersect(self, pol):
-        self.logger.debug("Intersect called")
-
-        current_min = pol
-        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
-        self.logger.debug("pol         = " + str(pol))
-
-        for rule in self.assayrule.get_list_of_rules():
-            current_min = rule.intersect(current_min)
-        self.logger.debug("current_min = " + str(current_min))
-        return current_min
-
-
-#        return self.assayrule.get_ruleset().intersect(pol)
-#        return pol.intersect(self.assayrule.get_ruleset())
-#        if pol == identity:
-#            return self
-#        elif pol == drop:
-#            return drop
-#        elif not isinstance(pol, matchURL):
-#            raise TypeError
-
-        #TODO FIXME: this needs implementation
-#        return self
-        #raise MainControlModuleException("matchURL.intersect")
-
-    def __and__(self, pol):
-        raise MainControlModuleException("matchURL.__and__")
-
-    def __hash__(self, pol):
-        raise MainControlModuleException("matchURL.__hash__")
-
-    def covers(self, other):
-        if (other == self):
-            return True
-        return False
-        raise MainControlModuleException("matchURL.covers")
+class matchClass(NetAssayMatch):
+    """
+    matches IPs related to the specified class of URLs.
+    """
+    def __init__(self, classification):
+        logging.getLogger('netassay.matchClass').info("matchURL.__init__(): called")
+        metadata_engine = DNSMetadataEngine.get_instance()
+        ruletype = AssayRule.CLASSIFICATION
+        rulevalue = classification
+        super(matchClass, self).__init__(metadata_engine, ruletype, rulevalue)
 
 
 
-
+#--------------------------------------
+# MAIN CONTROL MODULE - MCM
+#--------------------------------------
 class AssayMainControlModule:
     INSTANCE = None
     # Singleton! should be initialized once by the overall control program!
@@ -250,7 +143,7 @@ class AssayMainControlModule:
         self.dnsme = DNSMetadataEngine.get_instance() 
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
 
-        #BGP setup
+        #BME setup
         self.bgpme = BGPMetadataEngine.get_instance()
         self.bgpme_rules = self.bgpme.get_forwarding_rules() #Doesn't have any...
 

@@ -2,7 +2,7 @@
 
 from rv_parser import *
 
-FILENAME = "bgpclassifier/part_of_oix-full-snapshot-2014-06-01-0200"
+FILENAME = "/home/mininet/pyretic/pyretic/modules/bgpclassifier/part_of_oix-full-snapshot-2014-06-01-0200"
 
 # Perhaps this should just be a class that's inherited from... 
 # If so, would need to get rid of the data sources and seperate out the callback
@@ -35,13 +35,13 @@ class BGPQueryHandler:
         return paths
 
 
-    def register_for_AS(self, asnum, cb):
+    def register_for_AS(self, cb, asnum):
         if asnum not in self.as_callbacks.keys():
             self.as_callbacks[asnum] = list()
         if cb not in self.as_callbacks[asnum]:
             self.as_callbacks[asnum].append(cb)
 
-    def register_for_in_path(self, asnum, cb):
+    def register_for_in_path(self, cb, asnum):
         if asnum not in self.in_path_callbacks.keys():
             self.in_path_callbacks[asnum] = list()
         if cb not in self.in_path_callbacks[asnum]:

@@ -7,8 +7,10 @@ class AssayRule:
     # Ruletypes!
     CLASSIFICATION = 1
     AS             = 2
-    DNS_NAME       = 3
-    classtypes = [CLASSIFICATION, AS, DNS_NAME]
+    AS_IN_PATH     = 3
+    DNS_NAME       = 4
+    
+    classtypes = [CLASSIFICATION, AS, AS_IN_PATH, DNS_NAME]
 
     def __init__(self, ruletype, value, rule_update_cbs=[]):
         logging.getLogger('netassay.AssayRule').info("AssayRule.__init__(): called")

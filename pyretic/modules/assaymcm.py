@@ -5,6 +5,7 @@ import logging
 from pyretic.core.language import Filter
 from pyretic.modules.assayrule import *
 from pyretic.modules.dnsme import *
+from pyretic.modules.bgpme import *
 
 class MainControlModuleException(Exception):
     pass
@@ -205,6 +206,8 @@ class AssayMainControlModule:
         self.dnsme_rules = self.dnsme.get_forwarding_rules()
 
         #BGP setup
+        self.bgpme = BGPMetadataEngine.get_instance()
+        self.bgpme_rules = self.bgpme.get_forwarding_rules() #Doesn't have any...
 
         #General information
         self.update_policy_cb = None
@@ -250,5 +253,5 @@ class AssayMainControlModule:
         In particular, this adds rules to redirect DNS response packets to the
         """
         self.logger.info("AssayMCM:get_assay_ruleset(): called")
-        # Just keep adding on further rulesets
+        # Just keep adding on further rulesets as needed
         return self.dnsme_rules

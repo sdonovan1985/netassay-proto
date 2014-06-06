@@ -13,24 +13,69 @@ class MainControlModuleException(Exception):
 #this is based on match from pyretic.core.langauge
 class matchAS(Filter):
     """
-    matches only on IP addresses from the specified AS.
+    matches IP prfixes related to the specified AS.
     """
-    def __init__(self, AS):
-        self.assayrule = AssayRule(AssayRule.AS, AS)
+    def __init__(self, asnum):
+        logging.getLogger('netassay.matchAS').info("matchAS.__init__(): called")
+        self.logger = logging.getLogger('netassay.matchAS')
+        # probably should verify that the URL is vaid...
+        self.bme = BGPMetadataEngine.get_instance()
+        self.assayrule = AssayRule(AssayRule.AS, asnum)
         self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
-        pass
+        self.bme.new_rule(self.assayrule)
+        self._classifier = self.generate_classifier()
 
+        #FIXME
+        self.map = {}
+  
     def eval(self, pkt):
-        pass
-
-    def __or__(self, pol):
-        pass
-
-    def __and__(self, pol):
-        pass
+        for rule in self.assayrule.get_list_of_rules():
+            if rule.eval(pkt) == pkt:
+                return pkt
+        return set()
 
     def __repr__(self):
-        return "matchAS: %s" % ' '.join(map(str,self.map.items()))
+        retval = "matchAS: " + self.assayrule.value
+        for rule in self.assayrule.get_list_of_rules():
+            retval = retval + "\n   " + str(rule)
+        return retval
+
+    def generate_classifier(self):
+        #lovingly stolen from class match.
+        r1 = Rule(self,[identity])
+        r2 = Rule(identity,[drop])
+        return Classifier([r1, r2])
+#        raise MainControlModuleException("matchAS.generate_classifier")
+
+    def __eq__(self, other):
+        return (isinstance(other, matchAS) and 
+                self.assayrule.type == other.assayrule.type and
+                self.assayrule.value == other.assayrule.value)
+
+    def intersect(self, pol):
+        self.logger.debug("Intersect called")
+
+        current_min = pol
+        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
+        self.logger.debug("pol         = " + str(pol))
+
+        for rule in self.assayrule.get_list_of_rules():
+            current_min = rule.intersect(current_min)
+        self.logger.debug("current_min = " + str(current_min))
+        return current_min
+
+    def __and__(self, pol):
+        raise MainControlModuleException("matchAS.__and__")
+
+    def __hash__(self, pol):
+        raise MainControlModuleException("matchAS.__hash__")
+
+    def covers(self, other):
+        if (other == self):
+            return True
+        return False
+        raise MainControlModuleException("matchAS.covers")
+
 
 #this is based on match from pyretic.core.langauge
 class matchClass(Filter):

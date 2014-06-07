@@ -38,6 +38,15 @@ class AssayRule:
         # removed individually.
         self._rule_list.append(newrule)
         self._update_ruleset()
+
+    def add_rule_group(self, newrule):
+        # Does not check to see if it's a duplicate rule, as this allows the 
+        # same rule to be installed for different reasons, and they can be 
+        # removed individually.
+        self._rule_list.append(newrule)
+
+    def finish_rule_group(self):
+        self._update_ruleset()
         
     def has_rule(self, newrule):
         return newrule in self._rule_list

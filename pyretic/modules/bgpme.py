@@ -68,13 +68,13 @@ class BGPMetadataEntry:
 
         #setup based on initial BGP data
         if self.rule.type == AssayRule.AS:
-            new_prefixes = query_from_AS(str(self.rule.value))
+            new_prefixes = self.bgp_source.query_from_AS(self.rule.value)
             for prefix in new_prefixes:
-                self.rule.add_rule(match(srcip=IPPrefix(prefix)))
+                self.rule.add_rule_group(match(srcip=IPPrefix(prefix)))
         elif self.rule.type == AssayRule.AS_IN_PATH:
-            new_prefixes = query_in_path(str(self.rule.value))
+            new_prefixes = self.bgp_source.query_in_path(self.rule.value)
             for prefix in new_prefixes:
-                self.rule.add_rule(match(srcip=IPPrefix(prefix)))
+                self.rule.add_rule_group(match(srcip=IPPrefix(prefix)))
 
         #TODO: need to handle withdrawals!
 

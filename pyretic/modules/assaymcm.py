@@ -54,9 +54,15 @@ class NetAssayMatch(Filter):
     def intersect(self, pol):
         self.logger.debug("Intersect called")
 
-        current_min = pol
-        self.logger.debug("List length = " + str(len(self.assayrule.get_list_of_rules())))
-        self.logger.debug("pol         = " + str(pol))
+        current_min = identity
+        if isinstance(pol, NetAssayMatch):
+            for rule in pol.assayrule.get_list_of_rules():
+                if current_min == None:
+                    current_min = rule
+                    continue
+                current_min = rule.intersect(current_min)
+        else:
+            current_min = pol
 
         for rule in self.assayrule.get_list_of_rules():
             current_min = rule.intersect(current_min)

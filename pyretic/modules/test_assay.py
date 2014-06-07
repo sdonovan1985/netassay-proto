@@ -19,12 +19,13 @@ from pyretic.modules.assaymcm import *
 # links to 3 or 4 goes to the Internet or host, respectively. Anything coming
 # from the Internet or host can be manipulated - sent via the slow or fast
 # paths, depending on what is needed.
-
+import logging
 
 class TestAssay(DynamicPolicy):
     def __init__(self):
         super(TestAssay, self).__init__()
         self.flood = flood()
+        self.logger = logging.getLogger('netassay.test')
 
         #Start up Assay and register update_policy()
         self.assay_mcm = AssayMainControlModule.get_instance()
@@ -61,6 +62,24 @@ class TestAssay(DynamicPolicy):
                              (match(switch=2, inport=2) >> fwd(3)) +
                              (match(switch=2, inport=3) >>
                               if_(matchClass('VIDEO'), fwd(1), fwd(2))))
+        self.ASPATHs1rules = ((match(switch=1, inport=1) >> fwd(3)) +
+                              (match(switch=1, inport=2) >> fwd(3)) +
+                              (match(switch=1, inport=3) >> 
+                               if_(matchAS('7545'), fwd(1), fwd(2))))
+        self.ASPATHs2rules = ((match(switch=2, inport=1) >> fwd(3)) +
+                              (match(switch=2, inport=2) >> fwd(3)) +
+                              (match(switch=2, inport=3) >>
+                               if_(matchAS('7545'), fwd(1), fwd(2))))
+        self.INASs1rules = ((match(switch=1, inport=1) >> fwd(3)) +
+                            (match(switch=1, inport=2) >> fwd(3)) +
+                            (match(switch=1, inport=3) >> 
+                             if_(matchASPath('7545'), fwd(1), fwd(2))))
+        self.INASs2rules = ((match(switch=2, inport=1) >> fwd(3)) +
+                            (match(switch=2, inport=2) >> fwd(3)) +
+                            (match(switch=2, inport=3) >>
+                             if_(matchASPath('7545'), fwd(1), fwd(2))))
+        self.logger.warning("AFTER INASs2rules")
+        
         
         self.s1s2rules = ((match(switch=1) | match(switch=2)) >>
                           if_((match(inport=1)|match(inport=2)), fwd(3),
@@ -71,7 +90,9 @@ class TestAssay(DynamicPolicy):
     def update_policy(self):
         self.policy = self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 #        self.policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-        self.policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        self.policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        self.policy = self.INASs1rules + self.INASs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+        self.policy = self.ASPATHs1rules + self.ASPATHs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 #        self.policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 # self.s1s2rules
         print self.policy

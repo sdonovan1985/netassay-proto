@@ -1,5 +1,5 @@
 from pyretic.core.language import *
-from pyretic.modules.assaymcm import matchAS,matchClass,matchURL
+from pyretic.modules.assaymcm import NetAssayMatch
 
 ###############################################################################
 # Class hierarchy syntax tree traversal
@@ -9,9 +9,7 @@ def ast_fold(fun, acc, policy):
     if (  policy == identity or
           policy == drop or
           isinstance(policy,match) or
-          isinstance(policy,matchURL) or
-          isinstance(policy,matchClass) or
-          isinstance(policy,matchAS) or
+          isinstance(policy,NetAssayMatch) or
           isinstance(policy,modify) or
           policy == Controller or
           isinstance(policy,Query)):

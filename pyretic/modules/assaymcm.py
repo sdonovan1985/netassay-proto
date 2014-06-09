@@ -3,7 +3,6 @@
 import logging
 
 from pyretic.core.language import Filter
-from pyretic.lib.query import AggregateFwdBucket
 from pyretic.modules.assayrule import *
 from pyretic.modules.dnsme import *
 from pyretic.modules.bgpme import *

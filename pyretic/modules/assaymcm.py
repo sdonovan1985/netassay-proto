@@ -3,6 +3,7 @@
 import logging
 
 from pyretic.core.language import Filter
+from pyretic.lib.query import AggregateFwdBucket
 from pyretic.modules.assayrule import *
 from pyretic.modules.dnsme import *
 from pyretic.modules.bgpme import *
@@ -12,7 +13,7 @@ class MainControlModuleException(Exception):
 
 # All the new matchXXXX policies should inherit from here. They are all very
 # similar, so there is tremendous reuse of code. 
-#this is based on match from pyretic.core.langauge
+# This is based on match from pyretic.core.langauge
 class NetAssayMatch(Filter):
     def __init__(self, metadata_engine, ruletype, rulevalue):
         loggername = "netassay." + self.__class__.__name__
@@ -126,7 +127,6 @@ class matchClass(NetAssayMatch):
         ruletype = AssayRule.CLASSIFICATION
         rulevalue = classification
         super(matchClass, self).__init__(metadata_engine, ruletype, rulevalue)
-
 
 
 #--------------------------------------

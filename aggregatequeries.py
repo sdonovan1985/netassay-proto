@@ -38,6 +38,7 @@ from pyretic.lib.corelib import *
 from pyretic.lib.std import *
 from pyretic.lib.query import *
 from pyretic.modules.mac_learner import mac_learner
+from pyretic.modules.assaycount import *
 
 def packet_count_printer(counts):
     print "----counts------"
@@ -68,10 +69,18 @@ def counting():
 #    return q + p
     return q
 
+def AssayCountTest():
+    '''
+    This tests the new AssayCount primitives
+    '''
+    p = count_bytes_assay(match(srcip=IPAddr('10.0.0.1')), interval=1, group_by=['srcip', 'dstip'], cb=counting_printer)
+    return p
+
 ### Main ###
 
 def main():
-    return (packet_counts() + 
+    return (#packet_counts() + 
 #            byte_counts() + 
-            counting() + 
+#            counting() + 
+            AssayCountTest() +
             mac_learner())

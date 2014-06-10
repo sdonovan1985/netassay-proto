@@ -88,6 +88,7 @@ class DNSMetadataEntry:
             if entry.classification == self.rule.value:
                 self.logger.debug("    Rule type: CLASSIFICATION")
                 self.rule.add_rule(match(srcip=addr))
+                entry.register_timeout_callback(self.handle_expiration_callback)
 
         elif self.rule.type == AssayRule.AS:
             self.logger.debug("    Rule type: AS")
@@ -99,6 +100,7 @@ class DNSMetadataEntry:
                 if name == self.rule.value:
                     self.rule.add_rule(match(srcip=addr))
                     self.logger.debug("    New rule for " + name)
+                    entry.register_timeout_callback(self.handle_expiration_callback)
 
     def handle_classification_callback(self, addr, entry):
         # This should only be registered for if you care about a particular 

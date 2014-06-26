@@ -58,6 +58,7 @@ def queries_in_eval(acc, policy):
     elif policy == identity:
         pass
     elif (isinstance(policy,match) or 
+          isinstance(policy,NetAssayMatch) or
           isinstance(policy,modify) or 
           isinstance(policy,negate)):
         new_pkts = set()
@@ -88,6 +89,7 @@ def on_recompile_path(acc,pol_id,policy):
     if (  policy == identity or
           policy == drop or
           isinstance(policy,match) or
+          isinstance(policy,NetAssayMatch) or
           isinstance(policy,modify) or
           policy == Controller or
           isinstance(policy,Query)):

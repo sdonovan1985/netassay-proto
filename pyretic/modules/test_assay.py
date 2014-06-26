@@ -29,7 +29,6 @@ class TestAssay(DynamicPolicy):
 
         #Start up Assay and register update_policy()
         self.assay_mcm = AssayMainControlModule.get_instance()
-        self.assay_mcm.set_update_policy_callback(self.update_policy)
         
         # set up s3 and s4's very basic rules
         
@@ -88,13 +87,25 @@ class TestAssay(DynamicPolicy):
         self.update_policy()
 
     def update_policy(self):
-        self.policy = self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        self.policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        self.policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        self.policy = self.INASs1rules + self.INASs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-        self.policy = self.ASPATHs1rules + self.ASPATHs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        self.policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+        DNSResponse = match(srcport=53)
+
+        vanilla_policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+
+        curr_policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules
+#        curr_policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        curr_policy = self.INASs1rules + self.INASs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        curr_policy = self.ASPATHs1rules + self.ASPATHs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        curr_policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
 # self.s1s2rules
+
+        self.policy = if_(DNSResponse,
+                          vanilla_policy,
+                          curr_policy)
+                          
+        
+        print "================================================="
+        print "UPDATE POLICY!!!!"
+        print "================================================="
         print self.policy
 
 

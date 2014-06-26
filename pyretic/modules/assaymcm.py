@@ -2,7 +2,7 @@
 
 import logging
 
-from pyretic.core.language import Filter
+from pyretic.core.language import DynamicFilter
 from pyretic.modules.assayrule import *
 from pyretic.modules.dnsme import *
 from pyretic.modules.bgpme import *
@@ -13,7 +13,7 @@ class MainControlModuleException(Exception):
 # All the new matchXXXX policies should inherit from here. They are all very
 # similar, so there is tremendous reuse of code. 
 # This is based on match from pyretic.core.langauge
-class NetAssayMatch(Filter):
+class NetAssayMatch(DynamicFilter):
     def __init__(self, metadata_engine, ruletype, rulevalue):
         loggername = "netassay." + self.__class__.__name__
         logging.getLogger(loggername).info("__init__(): called")
@@ -21,18 +21,26 @@ class NetAssayMatch(Filter):
         # probably should verify that the URL is vaid...
         self.me = metadata_engine 
         self.assayrule = AssayRule(ruletype, rulevalue)
-        self.assayrule.set_update_callback(AssayMainControlModule.get_instance().rule_update)
+        self.assayrule.set_update_callback(self.update_policy)
         self.me.new_rule(self.assayrule)
         self._classifier = self.generate_classifier()
+        super(NetAssayMatch,self).__init__()
 
-        #FIXME
-        self.map = {}
 
-    def eval(self, pkt):
+    def update_policy(self):
+        new_policy = None
         for rule in self.assayrule.get_list_of_rules():
-            if rule.eval(pkt) == pkt:
-                return pkt
-        return set()
+            if new_policy == None:
+                new_policy = rule
+            else:
+                new_policy = new_policy + rule
+        self.policy = new_policy
+
+#    def eval(self, pkt):
+#        for rule in self.assayrule.get_list_of_rules():
+#            if rule.eval(pkt) == pkt:
+#                return pkt
+#        return set()
 
     def __repr__(self):
         retval = self.__class__.__name__ + ": " + self.assayrule.value
@@ -71,9 +79,6 @@ class NetAssayMatch(Filter):
 
     def __and__(self, pol):
         raise MainControlModuleException(self.__class__.__name__+":__and__")
-
-    def __hash__(self, pol):
-        raise MainControlModuleException(self.__class__.__name__+":__hash__")
 
     def covers(self, other):
         if (other == self):
@@ -153,10 +158,7 @@ class AssayMainControlModule:
         self.bgpme_rules = self.bgpme.get_forwarding_rules() #Doesn't have any...
 
         #General information
-        self.update_policy_cb = None
-
         self.logger.info("AssayMainControlModule Initialized!")
-
 
     @classmethod
     def get_instance(cls):
@@ -177,17 +179,9 @@ class AssayMainControlModule:
         self.logger.addHandler(console)
         self.logger.addHandler(logfile)
 
-
     def set_update_policy_callback(self, cb):
         self.logger.info("AssayMCM:set_update_policy_callback(): called")
         self.logger.debug("    callback: " + str(cb))
-        self.update_policy_cb = cb
-
-    def rule_update(self, assayrule):
-        #This is called whenever an AssayRule gets a ruleupdate
-        self.logger.info("AssayMCM:rule_update(): called")
-        if self.update_policy_cb is not None:
-            self.update_policy_cb()
 
     def get_assay_ruleset(self):
         """

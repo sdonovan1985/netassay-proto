@@ -33,7 +33,7 @@ class NetAssayMatch(DynamicFilter):
             if new_policy == None:
                 new_policy = rule
             else:
-                new_policy = new_policy + rule
+                new_policy = new_policy | rule
         self.policy = new_policy
 
 #    def eval(self, pkt):

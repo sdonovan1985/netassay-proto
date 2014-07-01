@@ -25,7 +25,9 @@ class NetAssayMatch(DynamicFilter):
         self.me.new_rule(self.assayrule)
         self._classifier = self.generate_classifier()
         super(NetAssayMatch,self).__init__()
-
+        # Just in case there was some initialized values in the rule, 
+        # actually use them:
+        self.assayrule.finish_rule_group()
 
     def update_policy(self):
         new_policy = None

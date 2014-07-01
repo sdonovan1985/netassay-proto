@@ -81,6 +81,7 @@ class TestAssay(DynamicPolicy):
 #                              (match(switch=2, inport=2) >> fwd(3)) +
 #                              (match(switch=2, inport=3) >>
 #                               if_(matchAS('7545'), fwd(1), fwd(2))))
+
 #        self.INASs1rules = ((match(switch=1, inport=1) >> fwd(3)) +
 #                            (match(switch=1, inport=2) >> fwd(3)) +
 #                            (match(switch=1, inport=3) >> 
@@ -89,6 +90,25 @@ class TestAssay(DynamicPolicy):
 #                            (match(switch=2, inport=2) >> fwd(3)) +
 #                            (match(switch=2, inport=3) >>
 #                             if_(matchASPath('7545'), fwd(1), fwd(2))))
+
+#        ruleS1 = ((match(srcip=IPPrefix('1.0.4.0/24')) |
+#                   match(dstip=IPPrefix('1.0.4.0/25'))))
+#        ruleS1 = (ruleS1 | 
+#                  (match(srcip=IPPrefix('1.0.5.0/24')) |
+#                   match(dstip=IPPrefix('1.0.5.0/25'))))
+#        ruleS2 = ((match(srcip=IPPrefix('1.0.4.0/24')) |
+#                   match(dstip=IPPrefix('1.0.4.0/25'))) |
+#                  (match(srcip=IPPrefix('1.0.5.0/24')) |
+#                   match(dstip=IPPrefix('1.0.5.0/25'))))
+#        self.IPPs1rules =  ((match(switch=1, inport=1) >> fwd(3)) +
+#                            (match(switch=1, inport=2) >> fwd(3)) +
+#                            (match(switch=1, inport=3) >> 
+#                             if_(ruleS1, fwd(1), fwd(2))))
+#        self.IPPs2rules =  ((match(switch=2, inport=1) >> fwd(3)) +
+#                            (match(switch=2, inport=2) >> fwd(3)) +
+#                            (match(switch=2, inport=3) >> 
+#                             if_(ruleS2, fwd(1), fwd(2))))
+
         self.logger.warning("AFTER INASs2rules")
         
         
@@ -106,10 +126,11 @@ class TestAssay(DynamicPolicy):
 
         curr_policy = self.URLs1rules + self.URLs2rules + self.s3rules + self.s4rules
 #        curr_policy = self.IPs1rules + self.IPs2rules + self.s3rules + self.s4rules
-#        curr_policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        curr_policy = self.INASs1rules + self.INASs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        curr_policy = self.ASPATHs1rules + self.ASPATHs2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
-#        curr_policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules + self.assay_mcm.get_assay_ruleset()
+#        curr_policy = self.CLASSs1rules + self.CLASSs2rules + self.s3rules + self.s4rules
+#        curr_policy = self.INASs1rules + self.INASs2rules + self.s3rules + self.s4rules
+#        curr_policy = self.IPPs1rules + self.IPPs2rules + self.s3rules + self.s4rules
+#        curr_policy = self.ASPATHs1rules + self.ASPATHs2rules + self.s3rules + self.s4rules
+#        curr_policy = self.s1rules + self.s2rules + self.s3rules + self.s4rules
 # self.s1s2rules
 
         self.policy = if_(DNSResponse,

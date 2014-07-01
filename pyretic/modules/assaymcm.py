@@ -30,13 +30,17 @@ class NetAssayMatch(DynamicFilter):
         self.assayrule.finish_rule_group()
 
     def update_policy(self):
-        new_policy = None
-        for rule in self.assayrule.get_list_of_rules():
-            if new_policy == None:
-                new_policy = rule
-            else:
+        listofrules = self.assayrule.get_list_of_rules()
+        count = len(listofrules)
+        if count == 0:
+            self.policy = drop
+        else:
+            new_policy = listofrules[0]
+            for rule in listofrules[1:]:
                 new_policy = new_policy | rule
-        self.policy = new_policy
+            self.policy = new_policy
+            
+    
 
 #    def eval(self, pkt):
 #        for rule in self.assayrule.get_list_of_rules():
